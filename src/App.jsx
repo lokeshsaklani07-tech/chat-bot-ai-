@@ -1,18 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import './index.css';
 
-// Production configuration via environment variables
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
+// Production configuration
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || '',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+);
+
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
 
 const App = () => {
-  const [studentId, setStudentId] = useState('GUEST'); 
   const [messages, setMessages] = useState([
-    { id: 1, text: "Namaste! 🙏 Welcome to the Graphic Era Hill University (GEHU) Dehradun AI Assistant. I am ready to help you. To see your marks or specific records, just mention your Student ID!", sender: 'bot' }
+    { id: 1, text: "Namaste! 🙏 I am your GEHU Dehradun Smart Assistant, powered by Gemini. I can talk about your marks, faculty, or anything on the internet. How can I help you today?", sender: 'bot' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const chatEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -22,6 +27,15 @@ const App = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Voice Assistant Function
+  const speak = (text) => {
+    if (!isVoiceEnabled) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -33,22 +47,54 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${N8N_WEBHOOK_URL}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: inputValue, student_id: studentId })
-      });
+      // 1. Fetch relevant data from Supabase (Context Injection)
+      let context = "No specific student data found.";
+      if (inputValue.toLowerCase().includes('mark') || inputValue.match(/\d{8}/)) {
+        const studentId = inputValue.match(/\d{8}/)?.[0];
+        if (studentId) {
+          const { data: marks } = await supabase.from('marks').select('*').eq('student_id', studentId);
+          if (marks) context = `Student Marks: ${JSON.stringify(marks)}`;
+        }
+      }
 
-      const data = await response.json();
+      const { data: faculty } = await supabase.from('faculty').select('name, linkedin_url, department');
+      const facultyContext = `Faculty Details: ${JSON.stringify(faculty)}`;
+
+      // 2. Call Gemini AI with Google Search enabled (Grounding)
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const prompt = `
+        You are a highly advanced AI Assistant for Graphic Era Hill University (GEHU), Dehradun, similar to Siri, Alexa, or ChatGPT.
+        
+        GEHU CONTEXT:
+        ${context}
+        ${facultyContext}
+        
+        RULES:
+        1. Greet warmly (Namaste).
+        2. Be conversational, intelligent, and helpful.
+        3. If student asks about marks, summarize them and suggest focus areas.
+        4. If student asks about anything else (world news, tech, science), use your internal knowledge and act like a general assistant.
+        5. Provide Faculty LinkedIn links when requested.
+        
+        USER QUERY: ${inputValue}
+      `;
+
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
       
       const botMsg = { 
         id: Date.now() + 1, 
-        text: data.output || "I've received your query and I am processing it for GEHU records...", 
+        text: responseText, 
         sender: 'bot' 
       };
+      
       setMessages(prev => [...prev, botMsg]);
+      speak(responseText);
+
     } catch (err) {
-      setMessages(prev => [...prev, { id: Date.now(), text: "Connection error. Please ensure your n8n backend is running.", sender: 'bot' }]);
+      console.error(err);
+      setMessages(prev => [...prev, { id: Date.now(), text: "I'm having trouble connecting to my brain. Please check your Gemini API key.", sender: 'bot' }]);
     } finally {
       setIsLoading(false);
     }
@@ -58,14 +104,18 @@ const App = () => {
     <div className="app-container">
       <header>
         <div>
-          <h1 style={{ fontSize: '1.2rem' }}>GEHU Dehradun AI</h1>
-          <p style={{ fontSize: '0.7rem', opacity: 0.7 }}>Graphic Era Hill University</p>
+          <h1 style={{ fontSize: '1.2rem' }}>GEHU Smart AI</h1>
+          <p style={{ fontSize: '0.7rem', opacity: 0.7 }}>Powered by Gemini & Supabase</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button 
+            onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+            className="erp-btn"
+            style={{ background: isVoiceEnabled ? 'var(--secondary)' : 'rgba(255,255,255,0.1)', color: isVoiceEnabled ? 'black' : 'white' }}
+          >
+            {isVoiceEnabled ? '🔊 Voice On' : '🔇 Voice Off'}
+          </button>
           <a href="https://student.gehu.ac.in/" target="_blank" rel="noreferrer" className="erp-btn">ERP</a>
-          <div className="user-info" style={{ fontSize: '0.8rem', opacity: 0.8, background: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '8px' }}>
-            Status: Live
-          </div>
         </div>
       </header>
 
@@ -75,18 +125,18 @@ const App = () => {
             {msg.text}
           </div>
         ))}
-        {isLoading && <div className="message bot" style={{ opacity: 0.6 }}>Gemma is thinking...</div>}
+        {isLoading && <div className="message bot" style={{ opacity: 0.6 }}>Assistant is processing...</div>}
         <div ref={chatEndRef} />
       </div>
 
       <form className="input-container" onSubmit={handleSendMessage}>
         <input 
           type="text" 
-          placeholder="Type your message here..." 
+          placeholder="Ask me anything (Marks, Faculty, or World)..." 
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
         />
-        <button type="submit">Send</button>
+        <button type="submit">Ask</button>
       </form>
     </div>
   );
