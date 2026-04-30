@@ -1,0 +1,68 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "verify-otp",
+        "options": {}
+      },
+      "id": "webhook-verify",
+      "name": "Verify OTP Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databaseTable",
+        "operation": "get",
+        "table": "students",
+        "id": "={{$node[\"Verify OTP Webhook\"].json[\"body\"][\"student_id\"]}}",
+        "options": {}
+      },
+      "id": "check-supabase",
+      "name": "Check Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$node[\"Verify OTP Webhook\"].json[\"body\"][\"otp\"]}}",
+              "value2": "={{$node[\"Check Supabase\"].json[\"otp_code\"]}}"
+            }
+          ]
+        }
+      },
+      "id": "compare-otp",
+      "name": "Compare OTP",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// In production, generate a real JWT here using a library\n// For now, we return a simple success token\nreturn [{\n  json: {\n    token: \"jwt_\" + Math.random().toString(36).substring(7),\n    status: \"success\",\n    message: \"OTP Verified\"\n  }\n}];"
+      },
+      "id": "generate-token",
+      "name": "Generate Token",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 200]
+    }
+  ],
+  "connections": {
+    "Verify OTP Webhook": {
+      "main": [[{ "node": "Check Supabase", "type": "main", "index": 0 }]]
+    },
+    "Check Supabase": {
+      "main": [[{ "node": "Compare OTP", "type": "main", "index": 0 }]]
+    },
+    "Compare OTP": {
+      "main": [[{ "node": "Generate Token", "type": "main", "index": 0 }]]
+    }
+  }
+}

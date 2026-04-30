@@ -24,11 +24,34 @@ const App = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleLogin = (e) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (studentId && otp) {
-      // Logic: Verify OTP via n8n/Supabase
-      setIsAuthenticated(true);
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // In production, N8N_WEBHOOK_URL is your n8n /verify-otp endpoint
+      const response = await fetch(`${N8N_WEBHOOK_URL}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ student_id: studentId, otp: otp })
+      });
+
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        localStorage.setItem('gehu_token', data.token); // Store JWT securely
+        setIsAuthenticated(true);
+      } else {
+        setError('Invalid Student ID or OTP. Please try again.');
+      }
+    } catch (err) {
+      setError('Connection failed. Please check your internet or n8n setup.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -73,7 +96,10 @@ const App = () => {
               onChange={(e) => setOtp(e.target.value)}
               required
             />
-            <button type="submit">Verify & Enter</button>
+            {error && <p style={{ color: '#ff4d4d', fontSize: '0.8rem' }}>{error}</p>}
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? 'Verifying...' : 'Verify & Enter'}
+            </button>
           </form>
           <div style={{ marginTop: '20px' }}>
             <a href="https://student.gehu.ac.in/" target="_blank" rel="noreferrer" style={{ color: 'var(--secondary)', fontSize: '0.8rem', textDecoration: 'none' }}>
