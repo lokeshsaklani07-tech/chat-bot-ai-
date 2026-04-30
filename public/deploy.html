@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEHU AI Chatbot | Deployment Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4B0082;
+            --secondary: #FFD700;
+            --bg: #0f0c29;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; translateY: 20px; }
+            to { opacity: 1; translateY: 0; }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--secondary), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            transition: transform 0.3s, border-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--secondary);
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            margin-top: 0;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card p {
+            font-size: 0.9rem;
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background: var(--secondary);
+            color: black;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #fff;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            margin-top: 15px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .steps {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .step-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .step-num {
+            background: var(--primary);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Deployment Hub</h1>
+            <p>Graphic Era Hill University | AI Chatbot Launchpad</p>
+        </header>
+
+        <div class="grid">
+            <!-- Chat App -->
+            <div class="card">
+                <div>
+                    <h2>🤖 Chat Assistant</h2>
+                    <p>The main AI interface for GEHU students. Deploy to Vercel or Netlify for high availability.</p>
+                </div>
+                <a href="./index.html" class="btn">Launch Chat App</a>
+                <div class="status"><span class="dot"></span> Ready for Build</div>
+            </div>
+
+            <!-- n8n Backend -->
+            <div class="card">
+                <div>
+                    <h2>⚙️ n8n Orchestrator</h2>
+                    <p>Connects Gemma AI, Supabase, and GitHub. Ensure your webhook URL is active.</p>
+                </div>
+                <a href="#" class="btn" style="background: rgba(255,255,255,0.1); color: white;">Configure n8n</a>
+                <div class="status"><span class="dot" style="background: #ffcc00; box-shadow: 0 0 10px #ffcc00;"></span> Pending Connection</div>
+            </div>
+
+            <!-- Supabase DB -->
+            <div class="card">
+                <div>
+                    <h2>🗄️ Supabase Database</h2>
+                    <p>Stores student marks, faculty records, and university knowledge with RLS security.</p>
+                </div>
+                <a href="https://supabase.com/dashboard" target="_blank" class="btn">Open Database</a>
+                <div class="status"><span class="dot"></span> Secured with RLS</div>
+            </div>
+        </div>
+
+        <div class="steps">
+            <h2 style="margin-top: 0; margin-bottom: 25px;">Final Deployment Steps</h2>
+            <div class="step-item">
+                <div class="step-num">1</div>
+                <div>
+                    <strong>Push to GitHub:</strong> You have already pushed to your repo. Ensure GitHub Actions is set up for automatic deployment.
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <div>
+                    <strong>Environment Variables:</strong> Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to your hosting provider.
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <div>
+                    <strong>Domain Binding:</strong> Connect your custom domain (e.g., <code>chat.gehu.ac.in</code>) to the deployment.
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            &copy; 2026 Graphic Era Hill University Dehradun | Secure AI Project
+        </footer>
+    </div>
+</body>
+</html>
