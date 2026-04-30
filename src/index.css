@@ -167,6 +167,28 @@ button:hover {
   color: black;
 }
 
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.online {
+  background: #00ff00;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+.loading {
+  background: #ffcc00;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
 /* Auth Overlay */
 .auth-overlay {
   position: fixed;
