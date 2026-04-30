@@ -3,8 +3,9 @@ import { pipeline } from '@xenova/transformers';
 import './index.css';
 
 const App = () => {
+  const [studentId, setStudentId] = useState('GUEST'); 
   const [messages, setMessages] = useState([
-    { id: 1, text: "Namaste! 🙏 I am your GEHU Dehradun Offline AI. I run directly in your browser without any API keys! Please wait while I load my brain (first time only)...", sender: 'bot' }
+    { id: 1, text: "Namaste! 🙏 I am Braina, your advanced GEHU Dehradun AI Assistant. I'm here to help you with everything from marks to general knowledge. Please wait while I initialize my brain...", sender: 'bot' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -83,8 +84,8 @@ const App = () => {
     <div className="app-container">
       <header>
         <div>
-          <h1 style={{ fontSize: '1.2rem' }}>GEHU Local AI</h1>
-          <p style={{ fontSize: '0.7rem', opacity: 0.7 }}>No API Key Needed | Private & Offline</p>
+          <h1 style={{ fontSize: '1.2rem' }}>Braina AI</h1>
+          <p style={{ fontSize: '0.7rem', opacity: 0.7 }}>Powered by GEHU Knowledge</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div className={`status-dot ${isModelLoaded ? 'online' : 'loading'}`}></div>
