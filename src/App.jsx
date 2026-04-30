@@ -20,17 +20,26 @@ const App = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Load the model locally in the browser
+  // Load the Gemma model locally in the browser
   useEffect(() => {
     const loadModel = async () => {
       try {
-        // We use a small, efficient model (SmolLM-135M) that is fast and doesn't need an API key
-        generatorRef.current = await pipeline('text-generation', 'Xenova/SmolLM-135M-Instruct');
+        setMessages(prev => [...prev, { id: Date.now(), text: "Starting the Google Gemma-2b-it engine... This is a high-performance open model. Please wait for the initial download (~1.5GB).", sender: 'bot' }]);
+        
+        // Switch to the official Gemma 2b model (quantized for web)
+        generatorRef.current = await pipeline('text-generation', 'Xenova/gemma-2b-it', {
+          progress_callback: (progress) => {
+            if (progress.status === 'progress') {
+              console.log(`Loading Gemma: ${progress.progress.toFixed(2)}%`);
+            }
+          }
+        });
+        
         setIsModelLoaded(true);
-        setMessages(prev => [...prev, { id: Date.now(), text: "Brain loaded! 🧠 I am now running locally on your device. Ask me anything about GEHU or the world!", sender: 'bot' }]);
+        setMessages(prev => [...prev, { id: Date.now(), text: "Gemma is now live! 🏔️ I am running directly in your device. Ask me anything about GEHU Dehradun!", sender: 'bot' }]);
       } catch (err) {
         console.error(err);
-        setMessages(prev => [...prev, { id: Date.now(), text: "Failed to load the local brain. Please check your internet for the initial download.", sender: 'bot' }]);
+        setMessages(prev => [...prev, { id: Date.now(), text: "Failed to load Gemma. This model requires a modern device with at least 4GB of RAM.", sender: 'bot' }]);
       }
     };
     loadModel();
