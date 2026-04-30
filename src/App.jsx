@@ -93,8 +93,8 @@ const App = () => {
       speak(responseText);
 
     } catch (err) {
-      console.error(err);
-      setMessages(prev => [...prev, { id: Date.now(), text: "I'm having trouble connecting to my brain. Please check your Gemini API key.", sender: 'bot' }]);
+      console.error("Gemini API Error:", err);
+      setMessages(prev => [...prev, { id: Date.now(), text: `I'm having trouble connecting to my brain. Error: ${err.message}. Please check your API key and network.`, sender: 'bot' }]);
     } finally {
       setIsLoading(false);
     }
