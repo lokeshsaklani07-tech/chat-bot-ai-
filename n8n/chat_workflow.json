@@ -1,0 +1,91 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "geu-chat",
+        "options": {}
+      },
+      "id": "webhook-chat",
+      "name": "Chat Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Verify JWT session\nconst token = items[0].json.headers.authorization.split(' ')[1];\n// In production, use a library to verify the token secret\n// For demo, we extract the student_id\nconst decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());\nreturn [{ json: { student_id: decoded.student_id, message: items[0].json.body.message } }];"
+      },
+      "id": "verify-jwt",
+      "name": "Verify JWT",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "resource": "databaseTable",
+        "operation": "getMany",
+        "table": "marks",
+        "filters": {
+          "fields": [
+            {
+              "field": "student_id",
+              "value": "={{$node[\"Verify JWT\"].json[\"student_id\"]}}"
+            }
+          ]
+        }
+      },
+      "id": "fetch-marks",
+      "name": "Fetch Marks",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "model": "gemma",
+        "options": {
+          "systemPrompt": "You are the GEHU Dehradun AI Assistant. Your primary focus is Graphic Era Hill University, Dehradun. \nRules:\n1. Greet the student warmly (Namaste!).\n2. Provide clear insights into their current marks and academic performance.\n3. Identify subjects where they need to focus more based on their scores (e.g., if a score is below 75%).\n4. Provide faculty LinkedIn links when requested for networking.\n5. If the student asks about GEU (Deemed to be University), you can provide info but always mention that your main focus is GEHU Dehradun.\n6. Strictly follow DPDP Act 2023: Never leak data between students.\n7. Keep the conversation academic and professional."
+        },
+        "prompt": "Student Marks Context: {{$node[\"Fetch Marks\"].json}}\nUser Message: {{$node[\"Verify JWT\"].json[\"message\"]}}"
+      },
+      "id": "gemma-ai",
+      "name": "Gemma AI",
+      "type": "n8n-nodes-base.ollama",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "privateKey",
+        "resource": "file",
+        "operation": "edit",
+        "owner": "lokeshsaklani07-tech",
+        "repository": "chat-bot-ai-logs",
+        "filePath": "logs/{{$today}}.log",
+        "fileContent": "[{{$now}}] User {{$node[\"Verify JWT\"].json[\"student_id\"]}} queried: {{$node[\"Verify JWT\"].json[\"message\"]}}",
+        "commitMessage": "Log entry for user {{$node[\"Verify JWT\"].json[\"student_id\"]}}"
+      },
+      "id": "secure-logging",
+      "name": "Secure Logging",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [1150, 450]
+    }
+  ],
+  "connections": {
+    "Chat Webhook": {
+      "main": [[{ "node": "Verify JWT", "type": "main", "index": 0 }]]
+    },
+    "Verify JWT": {
+      "main": [[
+        { "node": "Fetch Marks", "type": "main", "index": 0 },
+        { "node": "Gemma AI", "type": "main", "index": 0 }
+      ]]
+    },
+    "Gemma AI": {
+      "main": [[{ "node": "Secure Logging", "type": "main", "index": 0 }]]
+    }
+  }
+}
