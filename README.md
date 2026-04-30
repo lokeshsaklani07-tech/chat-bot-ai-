@@ -30,19 +30,32 @@ A secure, AI-powered assistant for students of **Graphic Era Deemed to be Univer
   - **GitHub**: Fine-grained PAT for your private logs repository.
   - **Ollama/Groq**: For Gemma AI integration.
 
-### 3. Frontend (React)
-```bash
-# Install dependencies
-npm install
+## 🌍 Global Deployment (Phones, Laptops, Tablets)
 
-# Run locally
-npm run dev
-```
+To make this chatbot accessible worldwide on any device, follow these steps:
 
-## 🔒 Security Measures
-- **Row Level Security**: Students can never see each other's marks.
-- **Secure Logging**: Logs events to a private GitHub repo without storing sensitive data.
-- **JWT Protection**: All communication with the backend is session-authenticated.
+### 1. Deploy Frontend (Vercel)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flokeshsaklani07-tech%2Fchat-bot-ai-)
+
+1. Click the button above or go to [Vercel](https://vercel.com).
+2. Connect your GitHub repository `chat-bot-ai-`.
+3. Add the **Environment Variables** from `.env.example`:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_N8N_WEBHOOK_URL`
+4. Click **Deploy**. Your site will be live at `https://your-project.vercel.app`.
+
+### 2. Host the Backend (n8n)
+For the chatbot to work 24/7, your n8n instance must be hosted:
+- **Option A (Easy)**: Use [n8n Cloud](https://n8n.io/cloud/).
+- **Option B (Free)**: Deploy n8n to **Railway** or **Render** using their one-click templates.
+
+### 3. Mobile Optimization
+The UI is built with a **Responsive Design** using CSS Flexbox and Glassmorphism, ensuring it looks premium on:
+- 📱 iPhones & Android Phones
+- 💻 Laptops (Mac/Windows)
+- 🖥️ Desktop Monitors
+- 📟 Tablets & iPads
 
 ## 📄 License
 Open Source - MIT. Created for GEU/GEHU Students.

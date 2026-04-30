@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
 
+// Production configuration via environment variables
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
+
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [studentId, setStudentId] = useState('');
