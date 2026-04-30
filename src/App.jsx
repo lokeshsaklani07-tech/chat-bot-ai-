@@ -7,13 +7,12 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const N8N_WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [studentId, setStudentId] = useState('');
-  const [otp, setOtp] = useState('');
+  const [studentId, setStudentId] = useState('GUEST'); 
   const [messages, setMessages] = useState([
-    { id: 1, text: "Namaste! 🙏 Welcome to the Graphic Era Hill University (GEHU) Dehradun AI Assistant. I am here to help you with your marks, faculty details, and university info. How can I assist you today?", sender: 'bot' }
+    { id: 1, text: "Namaste! 🙏 Welcome to the Graphic Era Hill University (GEHU) Dehradun AI Assistant. I am ready to help you. To see your marks or specific records, just mention your Student ID!", sender: 'bot' }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -24,37 +23,6 @@ const App = () => {
     scrollToBottom();
   }, [messages]);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // In production, N8N_WEBHOOK_URL is your n8n /verify-otp endpoint
-      const response = await fetch(`${N8N_WEBHOOK_URL}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ student_id: studentId, otp: otp })
-      });
-
-      const data = await response.json();
-
-      if (data.status === 'success') {
-        localStorage.setItem('gehu_token', data.token); // Store JWT securely
-        setIsAuthenticated(true);
-      } else {
-        setError('Invalid Student ID or OTP. Please try again.');
-      }
-    } catch (err) {
-      setError('Connection failed. Please check your internet or n8n setup.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
@@ -62,57 +30,29 @@ const App = () => {
     const userMsg = { id: Date.now(), text: inputValue, sender: 'user' };
     setMessages(prev => [...prev, userMsg]);
     setInputValue('');
+    setIsLoading(true);
 
-    // Mocking bot response
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${N8N_WEBHOOK_URL}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: inputValue, student_id: studentId })
+      });
+
+      const data = await response.json();
+      
       const botMsg = { 
         id: Date.now() + 1, 
-        text: "I am analyzing your GEHU academic records using Gemma AI... One moment.", 
+        text: data.output || "I've received your query and I am processing it for GEHU records...", 
         sender: 'bot' 
       };
       setMessages(prev => [...prev, botMsg]);
-    }, 1000);
+    } catch (err) {
+      setMessages(prev => [...prev, { id: Date.now(), text: "Connection error. Please ensure your n8n backend is running.", sender: 'bot' }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  if (!isAuthenticated) {
-    return (
-      <div className="auth-overlay">
-        <div className="auth-card">
-          <div className="logo" style={{ fontSize: '2rem', marginBottom: '10px' }}>🏔️</div>
-          <h2>GEHU Dehradun</h2>
-          <p>Secure Student AI Assistant</p>
-          <form onSubmit={handleLogin} className="input-group">
-            <input 
-              type="text" 
-              placeholder="Student ID (e.g. 20011001)" 
-              value={studentId}
-              onChange={(e) => setStudentId(e.target.value)}
-              required
-            />
-            <input 
-              type="password" 
-              placeholder="OTP / Password" 
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              required
-            />
-            {error && <p style={{ color: '#ff4d4d', fontSize: '0.8rem' }}>{error}</p>}
-            <button type="submit" disabled={isLoading}>
-              {isLoading ? 'Verifying...' : 'Verify & Enter'}
-            </button>
-          </form>
-          <div style={{ marginTop: '20px' }}>
-            <a href="https://student.gehu.ac.in/" target="_blank" rel="noreferrer" style={{ color: 'var(--secondary)', fontSize: '0.8rem', textDecoration: 'none' }}>
-              Go to GEHU ERP Portal →
-            </a>
-          </div>
-          <p style={{ marginTop: '20px', fontSize: '0.7rem', opacity: 0.6 }}>
-            Compliant with DPDP Act 2023. Data is encrypted.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="app-container">
@@ -124,7 +64,7 @@ const App = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <a href="https://student.gehu.ac.in/" target="_blank" rel="noreferrer" className="erp-btn">ERP</a>
           <div className="user-info" style={{ fontSize: '0.8rem', opacity: 0.8, background: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '8px' }}>
-            ID: {studentId}
+            Status: Live
           </div>
         </div>
       </header>
@@ -135,13 +75,14 @@ const App = () => {
             {msg.text}
           </div>
         ))}
+        {isLoading && <div className="message bot" style={{ opacity: 0.6 }}>Gemma is thinking...</div>}
         <div ref={chatEndRef} />
       </div>
 
       <form className="input-container" onSubmit={handleSendMessage}>
         <input 
           type="text" 
-          placeholder="Ask about marks, faculty, or university..." 
+          placeholder="Type your message here..." 
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
         />
